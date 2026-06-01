@@ -1,0 +1,75 @@
+# Nested Git metadata: track source dirs, not their repo metadata
+**/.git/
+**/.git
+
+# Rust / build outputs
+**/target/
+**/target-*/
+**/build_tmp*/
+**/target_exec_*/
+**/target_tmp*/
+**/targete/
+**/core/target_tmp/
+
+# Temporary probes and scratch artifacts
+**/tmp/
+**/tmp_*/
+**/_tmp*.py
+**/tmp_*.py
+**/tmp_write_probe/
+**/temp_perm_check/
+**/swarm_reports/
+**/.tools/
+*.snap.new
+analysis.py
+
+# Python/runtime cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local runtime, browser, and agent state
+run/
+.blackboard/
+**/.blackboard/
+.playwright-mcp/
+.codex/
+.claude/
+
+# Editor / OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Session UUID metadata directories
+019e8221-3ca9-7d21-ba2a-e0e7822d450d/
+019e82ab-133c-7e93-a00c-8285987680a0/
+
+# Obvious scratch / temp paths
+temp files/
+200
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*cookie*.txt
+*token*.txt
+*credential*.json
+*credentials*.json
+*secret*.json
+
+# Project-specific local/generated artifacts from codex-rs
+codex-rs/wecode
+codex-rs/cli/npm/vendor/**/*
+!codex-rs/cli/npm/vendor/.gitkeep
+codex-rs/cli/npm/*.tgz
+codex-rs/openspec/config.yaml
+codex-rs/core/models.json.bak
+codex-rs/core/models.json.repair_test
+codex-rs/core/tests/suite/_codex_tmp_write_probe.txt

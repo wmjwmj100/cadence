@@ -1,0 +1,11 @@
+---
+source: tui/src/history_cell.rs
+assertion_line: 3592
+expression: rendered
+---
+ USER   live input
+
+◦ [Image #1]
+  [Image #2]
+
+│ describe both

@@ -1,0 +1,10 @@
+---
+source: tui/src/collab.rs
+assertion_line: 383
+expression: render(&cell)
+---
+? Input sent
+  ? call: call-1
+    receiver: 00000000-0000-0000-0000-000000000002
+    status: running
+    prompt: do the thing

@@ -1,0 +1,10 @@
+---
+source: tui/src/bottom_pane/chat_composer.rs
+assertion_line: 5526
+expression: terminal.backend()
+---
+"┌ WECODE ──────────────────────────────────────────────────┐"
+"~ /mo                                                      │"
+"│                                                          │"
+"└──────────────────────────────────────────────────────────┘"
+"  /model  choose what model and reasoning effort to use     "

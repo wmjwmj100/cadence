@@ -1,0 +1,32 @@
+{
+  "name": "@gradence/wecode",
+  "version": "0.0.0-dev",
+  "license": "Apache-2.0",
+  "description": "Wecode CLI native executable distributed via npm.",
+  "bin": {
+    "wecode": "bin/wecode.js"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "README.md",
+    "bin",
+    "vendor"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gradence/wecode.git",
+    "directory": "cli/npm"
+  },
+  "bugs": {
+    "url": "https://github.com/gradence/wecode/issues"
+  },
+  "homepage": "https://github.com/gradence/wecode#readme",
+  "scripts": {
+    "prepare:local": "node scripts/prepare-local-vendor.js",
+    "smoke": "node bin/wecode.js --version",
+    "pack:check": "npm pack --dry-run"
+  }
+}

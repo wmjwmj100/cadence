@@ -1,0 +1,41 @@
+/target/
+/target-*/
+
+# Recommended value of CARGO_TARGET_DIR when using Docker as explained in .devcontainer/README.md.
+/target-amd64/
+
+# Value of CARGO_TARGET_DIR when using .devcontainer/devcontainer.json.
+/target-arm64/
+
+# Local build/test artifacts and throwaway probes.
+/build_tmp*/
+/core/target_tmp/
+/target_exec_*/
+/target_tmp*/
+/targete*/
+/tmp_write_probe/
+/temp_perm_check/
+/swarm_reports/
+/.tools/
+/core/models.json.bak
+/core/models.json.repair_test
+/core/tests/suite/_codex_tmp_write_probe.txt
+*.snap.new
+/_tmp*.py
+/tmp_*.py
+/analysis.py
+
+# IDE metadata
+/.idea/
+
+# Local machine artifacts and large local binaries
+/wecode
+/cli/npm/vendor/**/*
+/cli/npm/*.tgz
+!/cli/npm/vendor/.gitkeep
+/.claude/
+/.codex/
+/openspec/config.yaml
+/.blackboard/
+/core/.blackboard/
+/.env.local

@@ -1,0 +1,11 @@
+---
+source: tui/src/bottom_pane/mod.rs
+assertion_line: 1276
+expression: "render_snapshot(&pane, area)"
+---
+ WECODE  • Working [0s • esc i
+                              
+┌ WECODE ────────────────────┐
+~ Ask wecode to do anything  │
+└────────────────────────────┘
+  ? help   100% context left

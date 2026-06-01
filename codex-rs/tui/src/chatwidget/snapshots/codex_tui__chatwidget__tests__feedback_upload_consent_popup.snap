@@ -1,0 +1,15 @@
+---
+source: tui/src/chatwidget/tests.rs
+assertion_line: 5290
+expression: popup
+---
+  Upload logs?
+
+  The following files will be sent:
+    • codex-logs.log
+
+› 1. Yes  Share the current wecode session logs with the team for
+          troubleshooting.
+  2. No
+
+  Press enter to confirm or esc to go back

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Debug Trace Viewer</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page-bg"></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <h1>Debug Trace Viewer</h1>
+        <p>Canonical multi-agent timeline</p>
+      </div>
+
+      <div class="controls">
+        <label class="control-row">
+          <span>Auto refresh</span>
+          <input id="autoRefresh" type="checkbox" checked>
+        </label>
+        <label class="control-row">
+          <span>Interval</span>
+          <select id="refreshInterval">
+            <option value="1000">1s</option>
+            <option value="2000" selected>2s</option>
+            <option value="5000">5s</option>
+            <option value="10000">10s</option>
+          </select>
+        </label>
+        <button id="refreshNow" class="btn">Refresh now</button>
+      </div>
+
+      <section class="conversation-section">
+        <div class="section-title-row">
+          <h2>Conversations</h2>
+          <span id="conversationCount" class="subtle">0</span>
+        </div>
+        <div id="conversationList" class="conversation-list"></div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <header class="main-head">
+        <div>
+          <h2 id="activeConversationTitle">No conversation selected</h2>
+          <p id="activeConversationMeta" class="subtle"></p>
+        </div>
+        <div class="head-stats">
+          <div class="stat">
+            <span class="label">Entries</span>
+            <span id="statEntries" class="value">-</span>
+          </div>
+          <div class="stat">
+            <span class="label">Agents</span>
+            <span id="statLanes" class="value">-</span>
+          </div>
+          <div class="stat">
+            <span class="label">Schema</span>
+            <span id="statSchema" class="value">-</span>
+          </div>
+        </div>
+      </header>
+
+      <section id="statusBar" class="status-bar"></section>
+      <section id="traceContainer" class="trace-container"></section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
+

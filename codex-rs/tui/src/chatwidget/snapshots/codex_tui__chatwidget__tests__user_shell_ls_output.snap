@@ -1,0 +1,8 @@
+---
+source: tui/src/chatwidget/tests.rs
+assertion_line: 5362
+expression: blob
+---
+• shell ls
+  └ file1
+    file2

@@ -1,0 +1,23 @@
+---
+source: tui/src/chatwidget/tests.rs
+assertion_line: 7549
+expression: term.backend().vt100().screen().contents()
+---
+
+
+
+
+
+
+
+
+
+
+ WECODE  • Working [0s • esc interrupt]
+
+  ↳ Queued while /review is running.
+    ⌥ + ↑ edit
+┌ WECODE ──────────────────────────────────────────────────────────────────────┐
+~ Ask wecode to inspect, edit, test, or explain                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+  ? help                                                     100% context left

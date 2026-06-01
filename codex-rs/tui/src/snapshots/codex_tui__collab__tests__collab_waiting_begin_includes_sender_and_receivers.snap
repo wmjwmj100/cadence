@@ -1,0 +1,9 @@
+---
+source: tui/src/collab.rs
+assertion_line: 412
+expression: render(&cell)
+---
+? Waiting for agents
+  ? sender: wmj-assistant
+    call: call-2
+    receivers: Alice-worker, 00000000-0000-0000-0000-000000000003

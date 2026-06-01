@@ -1,0 +1,11 @@
+---
+source: tui/src/history_cell.rs
+assertion_line: 3542
+expression: rendered
+---
+ USER   live input
+
+│ one two
+│ three
+│ four five
+│ six seven

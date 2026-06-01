@@ -1,0 +1,8 @@
+---
+source: tui/src/history_cell.rs
+assertion_line: 3405
+expression: rendered
+---
+• shell echo one
+  │ echo two
+  └ no output

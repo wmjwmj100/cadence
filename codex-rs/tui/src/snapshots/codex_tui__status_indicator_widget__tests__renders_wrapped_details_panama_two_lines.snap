@@ -1,0 +1,8 @@
+---
+source: tui/src/status_indicator_widget.rs
+assertion_line: 342
+expression: terminal.backend()
+---
+" WECODE  • Working [0s]       "
+"  └ A man a plan a canal      "
+"    panama                    "

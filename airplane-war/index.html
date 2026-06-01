@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>飞机大战</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E%E2%9C%88%EF%B8%8F%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23020617'/%3E%3Cpath d='M32 6 43 42 32 36 21 42z' fill='%2354f4ff'/%3E%3Cpath d='M20 44 32 36 44 44 37 50 32 45 27 50z' fill='%23ff4fa3'/%3E%3Ccircle cx='32' cy='25' r='5' fill='%23fff'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --cyan: #54f4ff;
+      --pink: #ff4fa3;
+      --gold: #ffd166;
+      --green: #70e000;
+      --panel: rgba(5, 14, 35, 0.78);
+      --border: rgba(116, 230, 255, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #020617;
+      color: #e6fbff;
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    body {
+      touch-action: none;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(84, 244, 255, 0.2), transparent 32%),
+        radial-gradient(circle at 82% 26%, rgba(255, 79, 163, 0.16), transparent 30%),
+        linear-gradient(180deg, #07122e 0%, #030711 62%, #020617 100%);
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: crosshair;
+    }
+
+    .hud,
+    .tips,
+    .touch-hint,
+    .center-panel {
+      position: fixed;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .hud {
+      top: 18px;
+      left: 18px;
+      display: grid;
+      grid-template-columns: repeat(4, auto);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .hud-item,
+    .tips,
+    .touch-hint {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(2, 10, 26, 0.54);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.23), inset 0 0 18px rgba(84, 244, 255, 0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .hud-item {
+      min-width: 88px;
+      padding: 8px 12px;
+      font-size: 13px;
+      letter-spacing: 0.03em;
+    }
+
+    .hud-item span {
+      display: block;
+      margin-top: 2px;
+      color: var(--cyan);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .tips {
+      top: 18px;
+      right: 18px;
+      max-width: 330px;
+      padding: 10px 14px;
+      color: rgba(230, 251, 255, 0.78);
+      font-size: 13px;
+      line-height: 1.55;
+      text-align: right;
+    }
+
+    .touch-hint {
+      right: 18px;
+      bottom: 18px;
+      padding: 9px 13px;
+      color: rgba(230, 251, 255, 0.68);
+      font-size: 12px;
+    }
+
+    .center-panel {
+      top: 50%;
+      left: 50%;
+      width: min(92vw, 520px);
+      transform: translate(-50%, -50%);
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--panel);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), inset 0 0 46px rgba(84, 244, 255, 0.08);
+      text-align: center;
+      backdrop-filter: blur(18px);
+    }
+
+    .center-panel[hidden] {
+      display: none;
+    }
+
+    .title {
+      margin: 0;
+      color: #ffffff;
+      font-size: clamp(42px, 8vw, 72px);
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(84, 244, 255, 0.72), 0 0 44px rgba(255, 79, 163, 0.32);
+      letter-spacing: 0.07em;
+    }
+
+    .subtitle {
+      margin: 14px 0 22px;
+      color: rgba(230, 251, 255, 0.78);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 18px 0 24px;
+    }
+
+    .stat-card {
+      padding: 12px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(230, 251, 255, 0.72);
+      font-size: 12px;
+    }
+
+    .stat-card strong {
+      display: block;
+      margin-top: 5px;
+      color: var(--gold);
+      font-size: 22px;
+    }
+
+    .start-button {
+      pointer-events: auto;
+      width: min(100%, 280px);
+      border: 0;
+      border-radius: 999px;
+      padding: 15px 26px;
+      background: linear-gradient(135deg, var(--cyan), #7c5cff 54%, var(--pink));
+      color: white;
+      box-shadow: 0 18px 35px rgba(84, 244, 255, 0.25), 0 0 34px rgba(255, 79, 163, 0.22);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: transform 0.18s ease, filter 0.18s ease;
+    }
+
+    .start-button:hover {
+      filter: brightness(1.12);
+      transform: translateY(-2px);
+    }
+
+    .start-button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .mini {
+      margin: 16px 0 0;
+      color: rgba(230, 251, 255, 0.58);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 680px) {
+      .hud {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+
+      .hud-item {
+        min-width: 0;
+        padding: 7px 8px;
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .hud-item span {
+        font-size: 15px;
+      }
+
+      .tips {
+        display: none;
+      }
+
+      .touch-hint {
+        right: 10px;
+        bottom: 10px;
+      }
+
+      .center-panel {
+        padding: 24px 18px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" aria-label="飞机大战游戏画布"></canvas>
+
+  <section class="hud" aria-label="游戏状态">
+    <div class="hud-item">分数 <span id="score">0</span></div>
+    <div class="hud-item">最高 <span id="best">0</span></div>
+    <div class="hud-item">生命 <span id="lives">3</span></div>
+    <div class="hud-item">等级 <span id="level">1</span></div>
+  </section>
+
+  <aside class="tips">WASD / 方向键移动 · 自动射击<br>P 或 Esc 暂停 · Enter 重新开始</aside>
+  <aside class="touch-hint">触控：按住并拖动战机</aside>
+
+  <section class="center-panel" id="panel">
+    <h1 class="title" id="panelTitle">飞机大战</h1>
+    <p class="subtitle" id="panelText">驾驶霓虹战机穿过弹幕，击落敌机，拾取强化道具，冲击最高分。</p>
+    <div class="stats">
+      <div class="stat-card">本局分数 <strong id="finalScore">0</strong></div>
+      <div class="stat-card">最高纪录 <strong id="finalBest">0</strong></div>
+      <div class="stat-card">存活等级 <strong id="finalLevel">1</strong></div>
+    </div>
+    <button class="start-button" id="startButton" type="button">开始战斗</button>
+    <p class="mini">提示：蓝色强化提升火力，绿色道具回复生命，金色护盾可以抵挡一次撞击。</p>
+  </section>
+
+  <script>
+    const canvas = document.querySelector('#gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreNode = document.querySelector('#score');
+    const bestNode = document.querySelector('#best');
+    const livesNode = document.querySelector('#lives');
+    const levelNode = document.querySelector('#level');
+    const panel = document.querySelector('#panel');
+    const panelTitle = document.querySelector('#panelTitle');
+    const panelText = document.querySelector('#panelText');
+    const finalScore = document.querySelector('#finalScore');
+    const finalBest = document.querySelector('#finalBest');
+    const finalLevel = document.querySelector('#finalLevel');
+    const startButton = document.querySelector('#startButton');
+
+    const keys = new Set();
+    const bullets = [];
+    const enemies = [];
+    const enemyBullets = [];
+    const powerups = [];
+    const particles = [];
+    const stars = [];
+    const pointer = { active: false, x: 0, y: 0 };
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let lastTime = performance.now();
+    let animationId = 0;
+
+    const player = {
+      x: width / 2,
+      y: height - 120,
+      radius: 20,
+      speed: 420,
+      fireDelay: 0.15,
+      fireTimer: 0,
+      lives: 3,
+      invincible: 0,
+      power: 0,
+      shield: 0
+    };
+
+    const game = {
+      mode: 'menu',
+      score: 0,
+      best: Number(localStorage.getItem('planeWarBest') || 0),
+      level: 1,
+      time: 0,
+      spawnTimer: 0,
+      powerTimer: 8,
+      shake: 0
+    };
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function format(value) {
+      return Math.floor(value).toLocaleString('zh-CN');
+    }
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      player.x = clamp(player.x, 34, width - 34);
+      player.y = clamp(player.y, 82, height - 40);
+      seedStars();
+    }
+
+    function seedStars() {
+      const target = Math.floor((width * height) / 9000);
+      while (stars.length < target) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: rand(0.7, 2.2),
+          speed: rand(24, 105),
+          alpha: rand(0.25, 0.95)
+        });
+      }
+      stars.length = target;
+    }
+
+    function updateHud() {
+      scoreNode.textContent = format(game.score);
+      bestNode.textContent = format(game.best);
+      livesNode.textContent = player.lives;
+      levelNode.textContent = game.level;
+      finalScore.textContent = format(game.score);
+      finalBest.textContent = format(game.best);
+      finalLevel.textContent = game.level;
+    }
+
+    function showPanel(title, text, buttonText) {
+      panelTitle.textContent = title;
+      panelText.textContent = text;
+      startButton.textContent = buttonText;
+      panel.hidden = false;
+    }
+
+    function hidePanel() {
+      panel.hidden = true;
+    }
+
+    function resetGame() {
+      bullets.length = 0;
+      enemies.length = 0;
+      enemyBullets.length = 0;
+      powerups.length = 0;
+      particles.length = 0;
+      player.x = width / 2;
+      player.y = height - 120;
+      player.lives = 3;
+      player.invincible = 2;
+      player.power = 0;
+      player.shield = 0;
+      player.fireTimer = 0;
+      game.mode = 'playing';
+      game.score = 0;
+      game.level = 1;
+      game.time = 0;
+      game.spawnTimer = 0.45;
+      game.powerTimer = 7;
+      game.shake = 0;
+      hidePanel();
+      updateHud();
+    }
+
+    function togglePause() {
+      if (game.mode === 'playing') {
+        game.mode = 'paused';
+        showPanel('已暂停', '休整一下，准备好后继续清空天空。', '继续战斗');
+      } else if (game.mode === 'paused') {
+        game.mode = 'playing';
+        hidePanel();
+      }
+    }
+
+    function endGame() {
+      game.mode = 'gameover';
+      game.best = Math.max(game.best, game.score);
+      localStorage.setItem('planeWarBest', String(game.best));
+      updateHud();
+      showPanel('任务失败', '战机被击落，但天空还在等待下一次反攻。', '再来一局');
+    }
+
+    function addParticle(x, y, color, amount, speed = 180) {
+      for (let i = 0; i < amount; i += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = rand(speed * 0.25, speed);
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * velocity,
+          vy: Math.sin(angle) * velocity,
+          radius: rand(1.2, 4.5),
+          life: rand(0.35, 0.9),
+          maxLife: rand(0.35, 0.9),
+          color
+        });
+      }
+    }
+
+    function fireBullet() {
+      const spread = player.power > 0 ? 1 : 0;
+      const strong = player.power > 2;
+      bullets.push({ x: player.x, y: player.y - 30, vx: 0, vy: -720, radius: 5, damage: strong ? 2 : 1, color: '#54f4ff' });
+      if (spread) {
+        bullets.push({ x: player.x - 14, y: player.y - 20, vx: -95, vy: -675, radius: 4, damage: 1, color: '#9efcff' });
+        bullets.push({ x: player.x + 14, y: player.y - 20, vx: 95, vy: -675, radius: 4, damage: 1, color: '#9efcff' });
+      }
+      if (player.power > 3) {
+        bullets.push({ x: player.x - 26, y: player.y - 12, vx: -180, vy: -640, radius: 3.5, damage: 1, color: '#ffb3df' });
+        bullets.push({ x: player.x + 26, y: player.y - 12, vx: 180, vy: -640, radius: 3.5, damage: 1, color: '#ffb3df' });
+      }
+    }
+
+    function spawnEnemy() {
+      const roll = Math.random();
+      const levelBonus = Math.min(3.8, game.level * 0.18);
+      const type = roll > 0.9 ? 'shooter' : roll > 0.74 ? 'tank' : roll > 0.48 ? 'zigzag' : 'scout';
+      const base = {
+        scout: { radius: 18, hp: 1, speed: 115, points: 80, color: '#ff5c8a' },
+        zigzag: { radius: 20, hp: 2, speed: 100, points: 140, color: '#ff9f1c' },
+        tank: { radius: 28, hp: 5, speed: 66, points: 320, color: '#c77dff' },
+        shooter: { radius: 23, hp: 3, speed: 82, points: 220, color: '#f15bb5' }
+      }[type];
+      enemies.push({
+        type,
+        x: rand(base.radius + 16, width - base.radius - 16),
+        y: -base.radius - rand(0, 100),
+        vx: type === 'zigzag' ? rand(-95, 95) : rand(-22, 22),
+        vy: base.speed + levelBonus * 16,
+        radius: base.radius,
+        hp: base.hp + Math.floor(game.level / 5),
+        maxHp: base.hp + Math.floor(game.level / 5),
+        points: base.points,
+        color: base.color,
+        wave: rand(0, Math.PI * 2),
+        fireTimer: rand(1.4, 2.8)
+      });
+    }
+
+    function spawnPowerup(x = rand(40, width - 40), y = -30) {
+      const roll = Math.random();
+      const kind = roll > 0.76 ? 'life' : roll > 0.48 ? 'shield' : 'power';
+      powerups.push({
+        x,
+        y,
+        vy: 105,
+        radius: 15,
+        kind,
+        spin: 0,
+        color: kind === 'life' ? '#70e000' : kind === 'shield' ? '#ffd166' : '#54f4ff'
+      });
+    }
+
+    function enemyFire(enemy) {
+      const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+      enemyBullets.push({
+        x: enemy.x,
+        y: enemy.y + enemy.radius * 0.7,
+        vx: Math.cos(angle) * 180,
+        vy: Math.sin(angle) * 180,
+        radius: 5,
+        color: '#ff4fa3'
+      });
+    }
+
+    function damagePlayer() {
+      if (player.invincible > 0) return;
+      if (player.shield > 0) {
+        player.shield = 0;
+        player.invincible = 1.2;
+        game.shake = 0.2;
+        addParticle(player.x, player.y, '#ffd166', 26, 250);
+        return;
+      }
+      player.lives -= 1;
+      player.invincible = 1.8;
+      player.power = Math.max(0, player.power - 1);
+      game.shake = 0.32;
+      addParticle(player.x, player.y, '#ff4fa3', 42, 330);
+      updateHud();
+      if (player.lives <= 0) endGame();
+    }
+
+    function collectPowerup(item) {
+      if (item.kind === 'life') {
+        player.lives = Math.min(6, player.lives + 1);
+      } else if (item.kind === 'shield') {
+        player.shield = 1;
+      } else {
+        player.power = Math.min(5, player.power + 1);
+      }
+      addParticle(item.x, item.y, item.color, 22, 230);
+      updateHud();
+    }
+
+    function updatePlayer(dt) {
+      let dx = 0;
+      let dy = 0;
+      if (keys.has('arrowleft') || keys.has('a')) dx -= 1;
+      if (keys.has('arrowright') || keys.has('d')) dx += 1;
+      if (keys.has('arrowup') || keys.has('w')) dy -= 1;
+      if (keys.has('arrowdown') || keys.has('s')) dy += 1;
+      if (pointer.active) {
+        player.x += (pointer.x - player.x) * Math.min(1, dt * 12);
+        player.y += (pointer.y - player.y) * Math.min(1, dt * 12);
+      }
+      if (dx || dy) {
+        const length = Math.hypot(dx, dy) || 1;
+        player.x += (dx / length) * player.speed * dt;
+        player.y += (dy / length) * player.speed * dt;
+      }
+      player.x = clamp(player.x, 28, width - 28);
+      player.y = clamp(player.y, 76, height - 34);
+      player.invincible = Math.max(0, player.invincible - dt);
+      player.fireTimer -= dt;
+      if (player.fireTimer <= 0) {
+        fireBullet();
+        player.fireTimer = Math.max(0.07, player.fireDelay - player.power * 0.012);
+      }
+    }
+
+    function updateObjects(dt) {
+      game.time += dt;
+      game.level = Math.max(1, Math.floor(game.score / 1300) + 1);
+      game.spawnTimer -= dt;
+      game.powerTimer -= dt;
+      game.shake = Math.max(0, game.shake - dt);
+
+      if (game.spawnTimer <= 0) {
+        spawnEnemy();
+        const minimum = 0.22;
+        game.spawnTimer = Math.max(minimum, rand(0.62, 1.08) - game.level * 0.035);
+      }
+      if (game.powerTimer <= 0) {
+        spawnPowerup();
+        game.powerTimer = rand(9, 15);
+      }
+
+      bullets.forEach((bullet) => {
+        bullet.x += bullet.vx * dt;
+        bullet.y += bullet.vy * dt;
+      });
+      enemyBullets.forEach((bullet) => {
+        bullet.x += bullet.vx * dt;
+        bullet.y += bullet.vy * dt;
+      });
+      enemies.forEach((enemy) => {
+        enemy.wave += dt * 3.4;
+        enemy.x += (enemy.vx + Math.sin(enemy.wave) * (enemy.type === 'zigzag' ? 80 : 18)) * dt;
+        enemy.y += enemy.vy * dt;
+        if (enemy.x < enemy.radius || enemy.x > width - enemy.radius) enemy.vx *= -1;
+        if (enemy.type === 'shooter') {
+          enemy.fireTimer -= dt;
+          if (enemy.fireTimer <= 0 && enemy.y > 30 && enemy.y < height * 0.72) {
+            enemyFire(enemy);
+            enemy.fireTimer = rand(1.35, 2.4) - Math.min(0.55, game.level * 0.025);
+          }
+        }
+      });
+      powerups.forEach((item) => {
+        item.y += item.vy * dt;
+        item.spin += dt * 5;
+      });
+      particles.forEach((particle) => {
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        particle.vx *= 0.986;
+        particle.vy *= 0.986;
+        particle.life -= dt;
+      });
+
+      for (let i = bullets.length - 1; i >= 0; i -= 1) {
+        const bullet = bullets[i];
+        if (bullet.y < -30 || bullet.x < -40 || bullet.x > width + 40) bullets.splice(i, 1);
+      }
+      for (let i = enemyBullets.length - 1; i >= 0; i -= 1) {
+        const bullet = enemyBullets[i];
+        if (bullet.y > height + 40 || bullet.x < -40 || bullet.x > width + 40) enemyBullets.splice(i, 1);
+      }
+      for (let i = powerups.length - 1; i >= 0; i -= 1) {
+        if (powerups[i].y > height + 40) powerups.splice(i, 1);
+      }
+      for (let i = particles.length - 1; i >= 0; i -= 1) {
+        if (particles[i].life <= 0) particles.splice(i, 1);
+      }
+    }
+
+    function handleCollisions() {
+      for (let i = enemies.length - 1; i >= 0; i -= 1) {
+        const enemy = enemies[i];
+        for (let j = bullets.length - 1; j >= 0; j -= 1) {
+          const bullet = bullets[j];
+          if (distance(enemy, bullet) < enemy.radius + bullet.radius) {
+            enemy.hp -= bullet.damage;
+            bullets.splice(j, 1);
+            addParticle(bullet.x, bullet.y, '#9efcff', 5, 115);
+            if (enemy.hp <= 0) {
+              game.score += enemy.points + game.level * 15;
+              game.best = Math.max(game.best, game.score);
+              addParticle(enemy.x, enemy.y, enemy.color, enemy.type === 'tank' ? 38 : 24, 300);
+              if (Math.random() < 0.12) spawnPowerup(enemy.x, enemy.y);
+              enemies.splice(i, 1);
+              updateHud();
+            }
+            break;
+          }
+        }
+      }
+
+      for (let i = enemies.length - 1; i >= 0; i -= 1) {
+        const enemy = enemies[i];
+        if (distance(enemy, player) < enemy.radius + player.radius * 0.75) {
+          addParticle(enemy.x, enemy.y, enemy.color, 20, 260);
+          enemies.splice(i, 1);
+          damagePlayer();
+        } else if (enemy.y > height + enemy.radius) {
+          enemies.splice(i, 1);
+          damagePlayer();
+        }
+      }
+
+      for (let i = enemyBullets.length - 1; i >= 0; i -= 1) {
+        const bullet = enemyBullets[i];
+        if (distance(bullet, player) < bullet.radius + player.radius * 0.68) {
+          enemyBullets.splice(i, 1);
+          damagePlayer();
+        }
+      }
+
+      for (let i = powerups.length - 1; i >= 0; i -= 1) {
+        const item = powerups[i];
+        if (distance(item, player) < item.radius + player.radius) {
+          powerups.splice(i, 1);
+          collectPowerup(item);
+        }
+      }
+    }
+
+    function updateStars(dt) {
+      stars.forEach((star) => {
+        star.y += star.speed * dt * (game.mode === 'playing' ? 1.35 : 0.5);
+        if (star.y > height + 6) {
+          star.x = Math.random() * width;
+          star.y = -6;
+          star.size = rand(0.7, 2.2);
+          star.speed = rand(24, 105);
+        }
+      });
+    }
+
+    function update(dt) {
+      updateStars(dt);
+      if (game.mode !== 'playing') return;
+      updatePlayer(dt);
+      updateObjects(dt);
+      handleCollisions();
+    }
+
+    function drawBackground() {
+      const gradient = ctx.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#071939');
+      gradient.addColorStop(0.58, '#050b1f');
+      gradient.addColorStop(1, '#020617');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      stars.forEach((star) => {
+        ctx.globalAlpha = star.alpha;
+        ctx.fillStyle = star.size > 1.7 ? '#b7fbff' : '#ffffff';
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalAlpha = 0.2;
+      ctx.strokeStyle = '#54f4ff';
+      ctx.lineWidth = 1;
+      for (let y = (game.time * 56) % 80; y < height; y += 80) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y + 34);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawPlayer() {
+      const flicker = player.invincible > 0 && Math.floor(player.invincible * 16) % 2 === 0;
+      if (flicker) return;
+
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = player.shield ? '#ffd166' : '#54f4ff';
+
+      if (player.shield) {
+        ctx.strokeStyle = 'rgba(255, 209, 102, 0.7)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 34 + Math.sin(game.time * 7) * 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#54f4ff';
+      ctx.beginPath();
+      ctx.moveTo(0, -30);
+      ctx.lineTo(16, 14);
+      ctx.lineTo(0, 6);
+      ctx.lineTo(-16, 14);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#f8fdff';
+      ctx.beginPath();
+      ctx.moveTo(0, -23);
+      ctx.lineTo(8, 8);
+      ctx.lineTo(0, 3);
+      ctx.lineTo(-8, 8);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#ff4fa3';
+      ctx.beginPath();
+      ctx.moveTo(-22, 5);
+      ctx.lineTo(-38, 20);
+      ctx.lineTo(-13, 17);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(22, 5);
+      ctx.lineTo(38, 20);
+      ctx.lineTo(13, 17);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowColor = '#70e000';
+      ctx.fillStyle = `rgba(112, 224, 0, ${0.55 + Math.sin(game.time * 20) * 0.2})`;
+      ctx.beginPath();
+      ctx.moveTo(-8, 18);
+      ctx.lineTo(0, 34 + Math.sin(game.time * 18) * 5);
+      ctx.lineTo(8, 18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawEnemy(enemy) {
+      ctx.save();
+      ctx.translate(enemy.x, enemy.y);
+      ctx.rotate(Math.sin(enemy.wave) * 0.16);
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = enemy.color;
+      ctx.fillStyle = enemy.color;
+      ctx.beginPath();
+      ctx.moveTo(0, enemy.radius);
+      ctx.lineTo(enemy.radius * 0.86, -enemy.radius * 0.62);
+      ctx.lineTo(0, -enemy.radius * 0.24);
+      ctx.lineTo(-enemy.radius * 0.86, -enemy.radius * 0.62);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.78)';
+      ctx.beginPath();
+      ctx.ellipse(0, -enemy.radius * 0.18, enemy.radius * 0.28, enemy.radius * 0.42, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (enemy.maxHp > 1) {
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.fillRect(-enemy.radius, enemy.radius + 8, enemy.radius * 2, 4);
+        ctx.fillStyle = '#70e000';
+        ctx.fillRect(-enemy.radius, enemy.radius + 8, enemy.radius * 2 * (enemy.hp / enemy.maxHp), 4);
+      }
+      ctx.restore();
+    }
+
+    function drawBullets() {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      bullets.forEach((bullet) => {
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = bullet.color;
+        ctx.fillStyle = bullet.color;
+        ctx.beginPath();
+        ctx.roundRect(bullet.x - bullet.radius, bullet.y - 13, bullet.radius * 2, 26, bullet.radius);
+        ctx.fill();
+      });
+      enemyBullets.forEach((bullet) => {
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = bullet.color;
+        ctx.fillStyle = bullet.color;
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawPowerups() {
+      powerups.forEach((item) => {
+        ctx.save();
+        ctx.translate(item.x, item.y);
+        ctx.rotate(item.spin);
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = item.color;
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(-item.radius, -item.radius, item.radius * 2, item.radius * 2, 6);
+        ctx.stroke();
+        ctx.fillStyle = item.color;
+        ctx.font = 'bold 18px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(item.kind === 'life' ? '+' : item.kind === 'shield' ? '◇' : '★', 0, 1);
+        ctx.restore();
+      });
+    }
+
+    function drawParticles() {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      particles.forEach((particle) => {
+        ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawOverlayText() {
+      if (game.mode === 'playing') return;
+      ctx.save();
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = '#54f4ff';
+      ctx.font = '900 140px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('AIR RAID', width / 2, height * 0.72);
+      ctx.restore();
+    }
+
+    function render() {
+      drawBackground();
+      ctx.save();
+      if (game.shake > 0) {
+        ctx.translate(rand(-7, 7) * game.shake * 4, rand(-7, 7) * game.shake * 4);
+      }
+      drawBullets();
+      enemies.forEach(drawEnemy);
+      drawPowerups();
+      drawPlayer();
+      drawParticles();
+      ctx.restore();
+      drawOverlayText();
+    }
+
+    function loop(now) {
+      const dt = Math.min(0.033, (now - lastTime) / 1000 || 0);
+      lastTime = now;
+      update(dt);
+      render();
+      animationId = requestAnimationFrame(loop);
+    }
+
+    function pointerPosition(event) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('keydown', (event) => {
+      const key = event.key.toLowerCase();
+      keys.add(key);
+      if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' ', 'w', 'a', 's', 'd'].includes(key)) {
+        event.preventDefault();
+      }
+      if (key === 'enter' && game.mode !== 'playing') resetGame();
+      if (key === 'p' || key === 'escape') togglePause();
+    });
+    window.addEventListener('keyup', (event) => keys.delete(event.key.toLowerCase()));
+
+    canvas.addEventListener('pointerdown', (event) => {
+      if (game.mode === 'menu' || game.mode === 'gameover') return;
+      const position = pointerPosition(event);
+      pointer.active = true;
+      pointer.x = position.x;
+      pointer.y = position.y;
+      canvas.setPointerCapture(event.pointerId);
+    });
+    canvas.addEventListener('pointermove', (event) => {
+      if (!pointer.active) return;
+      const position = pointerPosition(event);
+      pointer.x = position.x;
+      pointer.y = position.y;
+    });
+    canvas.addEventListener('pointerup', () => {
+      pointer.active = false;
+    });
+    canvas.addEventListener('pointercancel', () => {
+      pointer.active = false;
+    });
+
+    startButton.addEventListener('click', () => {
+      if (game.mode === 'paused') {
+        togglePause();
+      } else {
+        resetGame();
+      }
+    });
+
+    resize();
+    updateHud();
+    showPanel('飞机大战', '驾驶霓虹战机穿过弹幕，击落敌机，拾取强化道具，冲击最高分。', '开始战斗');
+    cancelAnimationFrame(animationId);
+    animationId = requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+---
+source: tui/src/chatwidget/tests.rs
+assertion_line: 3039
+expression: terminal.backend()
+---
+"                                                                                "
+" WECODE  • Working [0s • esc interrupt]  // 1 background terminal running · /ps "
+"                                                                                "
+"┌ WECODE ──────────────────────────────────────────────────────────────────────┐"
+"~ Ask wecode to inspect, edit, test, or explain                                │"
+"└──────────────────────────────────────────────────────────────────────────────┘"
+"  ? help                                                     100% context left  "

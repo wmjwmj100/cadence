@@ -1,0 +1,15 @@
+---
+source: tui/src/collab.rs
+assertion_line: 466
+expression: render(&cell)
+---
+? Wait complete
+  ? sender: wmj-assistant
+    call: call-3
+    result: timed out
+    targets: 5 total ? 1 pending ? 1 running ? 1 completed ? 1 timed out ? 1 failed
+    Alice-worker [m-1] completed: callback says task is done
+    Bob-worker [m-2] running
+    Cara-worker [m-3] timed out
+    Dana-worker [m-4] failed
+    Eve-worker [m-5] pending

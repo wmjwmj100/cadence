@@ -1,0 +1,137 @@
+name: npm release package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to publish, for example 0.1.0
+        required: true
+      publish:
+        description: Publish to npm after packaging checks
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            binary: wecode
+            smoke: true
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+            binary: wecode
+            smoke: true
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            binary: wecode
+            smoke: true
+          - os: macos-15
+            target: aarch64-apple-darwin
+            binary: wecode
+            smoke: true
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary: wecode.exe
+            smoke: true
+          - os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            binary: wecode.exe
+            smoke: true
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.93.0
+          targets: ${{ matrix.target }}
+      - name: Install Linux musl build tools
+        if: ${{ runner.os == 'Linux' }}
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Build wecode
+        run: cargo build --release -p codex-cli --target ${{ matrix.target }}
+      - name: Stage binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "dist/${{ matrix.target }}/wecode"
+          cp "target/${{ matrix.target }}/release/${{ matrix.binary }}" "dist/${{ matrix.target }}/wecode/${{ matrix.binary }}"
+          if [[ "${{ runner.os }}" != "Windows" ]]; then
+            chmod 755 "dist/${{ matrix.target }}/wecode/${{ matrix.binary }}"
+          fi
+      - name: Smoke built binary
+        if: ${{ matrix.smoke }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          "dist/${{ matrix.target }}/wecode/${{ matrix.binary }}" --version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wecode-${{ matrix.target }}
+          path: dist/${{ matrix.target }}/wecode/${{ matrix.binary }}
+          if-no-files-found: error
+
+  package:
+    name: Pack npm package
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: node-version.txt
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wecode-*
+          path: cli/npm/vendor
+          merge-multiple: false
+      - name: Arrange vendor tree
+        run: |
+          set -euo pipefail
+          for artifact_dir in cli/npm/vendor/wecode-*; do
+            target="${artifact_dir##*/wecode-}"
+            mkdir -p "cli/npm/vendor/${target}/wecode"
+            find "$artifact_dir" -maxdepth 1 -type f -exec mv {} "cli/npm/vendor/${target}/wecode/" \;
+            rmdir "$artifact_dir"
+          done
+          find cli/npm/vendor -type f -name wecode -exec chmod 755 {} \;
+          find cli/npm/vendor -maxdepth 3 -type f | sort
+      - name: Set npm package version
+        run: npm version "${{ inputs.version }}" --no-git-tag-version
+        working-directory: cli/npm
+      - name: Smoke launcher from vendor tree
+        run: node bin/wecode.js --version
+        working-directory: cli/npm
+      - name: Pack npm package
+        run: npm pack
+        working-directory: cli/npm
+      - name: Install packed tarball and smoke PATH command
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/wecode-npm-prefix"
+          npm install -g --prefix "$RUNNER_TEMP/wecode-npm-prefix" ./gradence-wecode-*.tgz
+          "$RUNNER_TEMP/wecode-npm-prefix/bin/wecode" --version
+        working-directory: cli/npm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: cli/npm/gradence-wecode-*.tgz
+          if-no-files-found: error
+      - name: Publish npm package
+        if: ${{ inputs.publish == 'true' }}
+        run: npm publish --access public
+        working-directory: cli/npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
